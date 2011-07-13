@@ -1,0 +1,52 @@
+body {
+margin:0;
+padding:0;
+}
+
+
+#term {
+position:absolute;
+margin:0;
+padding:0;
+minimum-height:264px;
+font:12px Andale Mono, monospace;
+white-space:pre;
+}
+
+span.ul { text-decoration: underline; }
+/*black   darkred darkgreen '#8b8b00' darkblue darkmagenta darkcyan gray
+ dimgray     red     green    yellow   blue     magenta     cyan white 
+*/
+span.f0 { color: black;}
+span.f1 { color: darkred; }
+span.f2 { color: darkgreen; }
+span.f3 { color: #8b8b00; }
+span.f4 { color: darkblue; }
+span.f5 { color: darkmagenta; }
+span.f6 { color: darkcyan; }
+span.f7 { color: gray; }
+span.f8 { color: dimgray; }
+span.f9 { color: red; }
+span.f10 { color: green;}
+span.f11 { color: yellow;}
+span.f12 { color: blue;}
+span.f13 { color: magenta;}
+span.f14 { color: cyan;}
+span.f15 { color: white;}
+
+span.b0 { background:  black;}
+span.b1 { background:  darkred; }
+span.b2 { background:  darkgreen; }
+span.b3 { background:  #8b8b00; }
+span.b4 { background:  darkblue; }
+span.b5 { background:  darkmagenta; }
+span.b6 { background:  darkcyan; }
+span.b7 { background:  gray; }
+span.b8 { background:  dimgray; }
+span.b9 { background:  red; }
+span.b10 { background:  green;}
+span.b11 { background:  yellow;}
+span.b12 { background:  blue;}
+span.b13 { background:  magenta;}
+span.b14 { background:  cyan;}
+span.b15 { background:  white;}

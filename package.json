@@ -1,0 +1,16 @@
+{ "name" : "ntermd"
+, "description" : "pure javascript terminal"
+, "version" : "0.2"
+, "author" : "fengxx"
+, "licenses" :
+  [ { "type" : "MIT"
+    , "url" : "http://github.com/fengxx/termd/raw/master/README.txt"
+    }
+  ]
+, "repository" :
+  { "type" : "git"
+  , "url" : "http://github.com/fengxx/termd"
+  }
+, "engine" : [ "node >=0.2.3" ]
+, "main" : "./index.js"
+}

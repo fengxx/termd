@@ -1,0 +1,11 @@
+if you are running under node.js v0.4.9 just run
+node termd.js
+then open your browser point to http://IP:8180
+if node.js is version v0.2.3, then go to backport folder and build the addon using
+
+cd backport
+node-waf configure build
+node test_pty.js
+cp build/default/ptyext.node ..
+cd ..
+node termd.js
