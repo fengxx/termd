@@ -532,7 +532,7 @@ Terminal.prototype._process_escseq=function(ch){
 Terminal.prototype._scroll_content_up=function(m_bot_pos,lineNum){
     //move text up
     var n=Math.min(m_bot_pos-this._scrolltop,lineNum);
-    console.log("move from "+m_bot_pos +" up "+lineNum +" line");
+    //console.log("move from "+m_bot_pos +" up "+lineNum +" line");
     for(var i=this._scrolltop;i+n<=m_bot_pos;i++){
         for(var j=0;j<this.cols;j++){
             var idx=(i+this._scrolltop)*this.cols+j;
@@ -551,7 +551,7 @@ Terminal.prototype._scroll_content_up=function(m_bot_pos,lineNum){
         }      
     }
     //clean after cursor
-    console.log("x" +m_bot_pos +" y"+this.y);
+    //console.log("x" +m_bot_pos +" y"+this.y);
     for(var i=this.x+1;i<this.cols;i++){
         //TODO
        var idx=this.cols*m_bot_pos+i;
@@ -594,7 +594,7 @@ Terminal.prototype._move_up=function(num){
 Terminal.prototype._move_down=function(num){
     num=setDefaultValue(num, 1);
     this.y+=num;
-    console.log("y:"+ this.y+ " bot:" +this._scrollbottom);
+    //console.log("y:"+ this.y+ " bot:" +this._scrollbottom);
     if(this.y<=this._scrollbottom){
         return;
     }

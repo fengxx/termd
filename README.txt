@@ -1,4 +1,4 @@
-ntermd is a pure javascript terminal run on node.js. 
+termd is a pure javascript terminal service run on node.js. 
 It used web socket instead of ajax so server can push screen updates to client.
 It was inspired by Ajaxterm(http://antony.lesuisse.org/qweb/trac/wiki/AjaxTerm),
 Webshell(http://www-personal.umich.edu/~mressl/webshell),
