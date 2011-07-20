@@ -3,7 +3,6 @@ var http = require('http'),
 url = require('url'),
 fs = require('fs'),
 io = require('socket.io'),
-sys = require('sys'),
 QueryString=require("querystring"),
 sh=require("./subshell");
 
@@ -80,7 +79,7 @@ server.listen(8180);
 var socketio = io.listen(server);		
 socketio.on('connection', function(client){
     console.log("client is "+client.sessionId);
-    terms[client.sessionId]=new sh.subShell(30,80,
+    terms[client.sessionId]=new sh.subShell(50,132,
         function(output){
             //console.log(output);
             client.send({

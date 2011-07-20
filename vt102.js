@@ -5,10 +5,8 @@
 //http://vt100.net/docs/vt102-ug/contents.html
 //http://en.wikipedia.org/wiki/C0_and_C1_control_codes
 //http://en.wikipedia.org/wiki/ANSI_escape_code
-
-var Stream = require('net').Stream;
-var DEFAULT_ATTR=0x7;
-var NULL_TXT="\x00";
+var DEFAULT_ATTR=263; //white on black
+var NULL_CHAR_CODE=0;
 
 exports.TermAttribute = TermAttribute;
 exports.CreateAttribute = function (num) {
@@ -17,6 +15,13 @@ exports.CreateAttribute = function (num) {
 
 String.prototype.endsWith = function (s) {
   return this.length >= s.length && this.substr(this.length - s.length) == s;
+}
+
+Array.prototype.batchUpdate=function(start_pos,length,_str){
+    var self=this;
+   for(var i=start_pos;i-start_pos<length && i<self.length;i++){
+        self[i]=_str;
+   }
 }
 
 function TermAttribute(num){
@@ -52,10 +57,11 @@ function toHex(n) {
     return n.toString(16);
 }
 
-var Terminal = exports.Terminal = function(width,height){
+var Terminal = exports.Terminal = function(height,width,output){
     this.version="v0.1";
     this.cols=width;
     this.rows=height;
+    this.output=output;
     this._tabstops={};
     this.reset=function(){
         this.x=this.y=0; //start with zero
@@ -68,7 +74,7 @@ var Terminal = exports.Terminal = function(width,height){
         this._scrollbottom=this.rows-1; //scrolling region bottom
         this.opts={
             LINEWRAP:1,
-            LFTOCRLF:1,
+            LFTOCRLF:0,
             IGNOREXOFF:1
         };
         this.scrt=new Array(); //blank screen text
@@ -76,7 +82,7 @@ var Terminal = exports.Terminal = function(width,height){
 
         //set default screen
         for(var i=0;i<this.cols*this.rows;i++){
-            this.scrt[i]=NULL_TXT;  
+            this.scrt[i]=NULL_CHAR_CODE;  
             this.scra[i]=DEFAULT_ATTR;
         }
         //reset tab stops        
@@ -91,8 +97,10 @@ var Terminal = exports.Terminal = function(width,height){
     this.reset();
 }
 
-Terminal.prototype.call_output=function(){
-    //empty
+Terminal.prototype.call_output=function(str){
+     if(typeof this.output !="undefined" &&  typeof this.output["write"] == "function"){
+        this.output.write(str);
+     }
     }
 
 Terminal.prototype._ctlseq   = {       // control characters
@@ -189,7 +197,7 @@ Terminal.prototype._csiseq   = {  // ECMA-48 CSI sequences
     'P' : 'DCH',               // delete characters on current line
     'X' : 'ECH',               // erase characters on current line
     'a' : 'HPR',               // move cursor right
-    'c' : 'DA',                // return ESC [ ? 6 c (VT102)
+    'c' : 'DA',                // Device attributes (what are you) return ESC [ ? 6 c (VT102)
     'd' : 'VPA',               // move to row (current column)
     'e' : 'VPR',               // move cursor down
     'f' : 'HVP',               // move cursor to row, column
@@ -372,13 +380,13 @@ Terminal.prototype._funcs   = {     // supported character sequences
     'DECALN'   : "_code_DECALN",  // DEC alignment test - fill screen with E's
     'DECANM' : undefined,         // ANSI/VT52 mode
     'DECARM' : undefined,         // auto repeat mode
-    'DECAWM' : undefined,         // auto wrap mode
+    'DECAWM' : "_code_DECAWM",    // auto wrap mode
     'DECCKM' : undefined,         // cursor key mode
     'DECPAM' : undefined,         // set application keypad mode
     'DECPEX' : undefined,         // print screen / scrolling region
     'DECPFF' : undefined,         // sent FF after print screen, or not
     'DECPNM' : undefined,         // set numeric keypad mode
-    'DECCOLM' : undefined,         // 132 column mode
+    'DECCOLM' : "_code_DECCOLM",         // 132 column mode
     'DECINLM' : undefined,         // interlace mode
     'DECSCLM' : undefined,         // jump/smooth scroll mode
     'DECSCNM' : undefined,         // reverse/normal screen mode
@@ -431,6 +439,9 @@ Terminal.prototype._process_ctl=function(ch){
     }
     var func=this._funcs[name];
     if(typeof func !='undefined'){
+        // if(func !="_code_ESC"){
+            // console.log("ctrl:" +func);
+         // }
         this[func].call(this,ch);
     }
 }
@@ -439,7 +450,6 @@ Terminal.prototype._process_text=function(ch){
     if(this._xon==0){
         return;
     }
-
     //no line wrap - truncate
     if(this.x>=this.cols) {
         if(this.opts["LINEWRAP"]==0) {
@@ -452,12 +462,13 @@ Terminal.prototype._process_text=function(ch){
     var idx=this.cols*this.y+this.x;
     this.scrt[idx]=ch;
     this.scra[idx]=this.attr;
+    //debug
+    //console.log("x:"+this.x+"y:"+this.y +"ch:" +String.fromCharCode(ch));
     this.x++;
 }
 
 
 Terminal.prototype._process_escseq=function(ch){
-    //console.log("_process_escseq");
     //Check the escape-sequence buffer, and process it if necessary.
     if(this._escbuf==null || this._xon==0){
         return;
@@ -478,7 +489,6 @@ Terminal.prototype._process_escseq=function(ch){
             }
         }    
     }else if(this._inesc=='CSI') {
-        //console.log("in CSI/ESC[ " +this._escbuf);
         for(var name in this._csiseq){
         //check if ends With name
             if(!this._escbuf.endsWith(name)){
@@ -489,7 +499,7 @@ Terminal.prototype._process_escseq=function(ch){
             var func=this._funcs[funcKey];            
             if(typeof func !="undefined"){
                 var funcArgs=this._escbuf.split(/;/);
-                //console.log("buffer "+ this._escbuf+" name "+name+"  key "+ funcKey +" ->"+func+" arg:"+funcArgs +" length"+ funcArgs.length);
+                //console.log("buffer "+ this._escbuf+" name "+name+"  key "+ funcKey +" ->"+func+" arg:"+funcArgs +" length: "+ funcArgs.length +" x:"+this.x +" y:"+this.y);
                 this[func].apply(this,funcArgs);
                 this._escbuf=null;
                 this._inesc="";
@@ -529,80 +539,69 @@ Terminal.prototype._process_escseq=function(ch){
     }
 }
 
-Terminal.prototype._scroll_content_up=function(m_bot_pos,lineNum){
+Terminal.prototype._scroll_content_up=function(p_top,p_bottom,lineNum){
     //move text up
-    var n=Math.min(m_bot_pos-this._scrolltop,lineNum);
-    //console.log("move from "+m_bot_pos +" up "+lineNum +" line");
-    for(var i=this._scrolltop;i+n<=m_bot_pos;i++){
-        for(var j=0;j<this.cols;j++){
-            var idx=(i+this._scrolltop)*this.cols+j;
-            var srcIdx=idx+n*this.cols;
-            //copy line downward
+    var n=Math.min(p_bottom-p_top,lineNum);
+    var mvfrom=p_top*this.cols;
+    var mvend=(p_bottom+1)*this.cols;
+    for(var idx=mvfrom;idx<mvend;idx++){
+        var srcIdx=idx+n*this.cols;
+        if(srcIdx<mvend) {
             this.scrt[idx]=this.scrt[srcIdx];
             this.scra[idx]=this.scra[srcIdx];
-        }
-    }
-    //mark empty
-    for(var i=m_bot_pos-n+1;i<m_bot_pos;i++){
-        for(var j=0;j<this.cols;j++){
-            var idx=i*this.cols+j;
-            this.scrt[idx]=NULL_TXT;
+        }else{
+            this.scrt[idx]=NULL_CHAR_CODE;
             this.scra[idx]=DEFAULT_ATTR;
-        }      
-    }
-    //clean after cursor
-    //console.log("x" +m_bot_pos +" y"+this.y);
-    for(var i=this.x+1;i<this.cols;i++){
-        //TODO
-       var idx=this.cols*m_bot_pos+i;
-       this.scrt[idx]=NULL_TXT;
-       this.scra[idx]=DEFAULT_ATTR;
+        }
     }
 }
 
-Terminal.prototype._scroll_content_down=function(m_top_pos,lineNum){
-    var n=Math.min(lineNum,this._scrollbottom-m_top_pos);
-    //move text down TODO test this
-    for(var i=this._scrollbottom;i>this.m_top_pos+n;i--){
-        for(var j=0;j<this.cols;j++){
-            var idx=i*this.cols+j;
-            var srcIdx=(idx-n)*this.cols;
+Terminal.prototype._scroll_content_down=function(p_top,p_bottom,lineNum){
+    var n=Math.min(p_bottom-p_top,lineNum);
+    //move text down
+    var mvfrom=(p_bottom+1)*this.cols-1;
+    var mvend=p_top*this.cols;
+    for(var idx=mvfrom;idx>=mvend;idx--){
+        var srcIdx=(idx-n)*this.cols;
+        if(srcIdx>=mvend){
             this.scrt[idx]=this.scrt[srcIdx];
             this.scra[idx]=this.scra[srcIdx];
-        }
-    }
-    //clear
-    for(var i=0;i<n;i++){
-        for(var j=0;j<this.cols;j++){
-            var idx=(this.m_top_pos+i)*this.cols+j;
-            this.scrt[idx]=NULL_TXT;
+        }else{
+            this.scrt[idx]=NULL_CHAR_CODE;
             this.scra[idx]=DEFAULT_ATTR;
-        }      
+        }
     }
 }
 
 Terminal.prototype._move_up=function(num){
-    num=setDefaultValue(num, 0);
-    this.y-=num;
+    var pnum=getNumberValue(num, 1);
+    this.y-=pnum;
     if(this.y>=this._scrolltop){
         return;
     }
-    this._scroll_content_down(this._scrollbottom,this._scrolltop-this.y);
+    this._scroll_content_down(this._scrolltop,this._scrollbottom,this._scrolltop-this.y);
     this.y=this._scrolltop;    
 }
 
 Terminal.prototype._move_down=function(num){
-    num=setDefaultValue(num, 1);
-    this.y+=num;
-    //console.log("y:"+ this.y+ " bot:" +this._scrollbottom);
+    var pnum=getNumberValue(num, 1);
+    this.y=this.y+pnum;    
     if(this.y<=this._scrollbottom){
         return;
     }
-    var lineNum=this.y-this._scrollbottom;
-    this.y=this._scrollbottom;    
-    this._scroll_content_up(this._scrollbottom,lineNum);    
+    var dx=this.y-this._scrollbottom;
+    this.y=this._scrollbottom;
+    this._scroll_content_up(this._scrolltop,this._scrollbottom,dx);    
 }
 
+
+Terminal.prototype._cursor_down=function(num){
+    this.y=Math.min(this._scrollbottom, this.y+num);    
+}
+
+Terminal.prototype._cursor_up=function(num){
+    this.y=Math.max(this._scrolltop, this.y-num);    
+}
 
 Terminal.prototype._code_BEL=function(){
     //CSI OSC can be terminated with a BEL
@@ -636,22 +635,22 @@ Terminal.prototype._code_TBC=function(num){
 }
 Terminal.prototype._code_CHA=function(col){
     //move to column in current row
-    col =setDefaultValue(col, 1);
+    col =getNumberValue(col, 1);
     var sx=col>=this.cols?this.cols-1: (col<0?0:col-1);
     this.x=sx;
 }
 Terminal.prototype._code_CNL=function(num){
     //move cursor down and to first column
-    num =setDefaultValue(num, 1);
+    num =getNumberValue(num, 1);
     this.x=0;
-    this._move_down(num);
+    this._cursor_down(num);
 }
 
 Terminal.prototype._code_CPL=function(num){ 
     //move cursor up and to first column
-    num =setDefaultValue(num, 1);
+    num =getNumberValue(num, 1);
     this.x=0;
-    this._move_up(num);
+    this._cursor_up(num);
 }
 Terminal.prototype._code_CR=function(){
     //carriage return
@@ -661,36 +660,38 @@ Terminal.prototype._code_CSI=function(){
     //ESC [
     this._code_default("CSI");
 }
-Terminal.prototype._code_CUB=function(num){
-    num =setDefaultValue(num, 1);
+
+Terminal.prototype._code_CUB=function(lnum){
+    var pnum =getNumberValue(lnum, 1);
     //move cursor left
-    if(this.x>num){
-        this.x-=num;
-    }    
+    if(this.x>=pnum){
+        this.x-=pnum;
+    }else{
+        this.x=0;
+    }
 }
 
 Terminal.prototype._code_CUD=function(num){
-    num =setDefaultValue(num, 1);
+    var pnum =getNumberValue(num, 1);
     //move cursor down
-    var vd=num<1?1:num;
-    this._move_down(vd);
+    this._cursor_down(pnum);
 }
     
-Terminal.prototype._code_CUF=function(num){
+Terminal.prototype._code_CUF=function(rnum){
     //move cursor right
-    num =setDefaultValue(num, 1);
+    var num =getNumberValue(rnum, 1);
     if(this.x+num>=this.cols-1){
-        this.x=this.cols;
+        this.x=this.cols-1;
     }
     else{
         this.x+=num;
     }
 }
-Terminal.prototype._code_CUP=function(row,col){
-    //move cursor to row, column
-    //console.log("row is "+row +"col "+col);
-    row=setDefaultValue(row, 1);
-    col=setDefaultValue(col, 1);
+
+Terminal.prototype._code_CUP=function(crow,ccol){
+    //move cursor to row, column    
+    var row=getNumberValue(crow, 1);
+    var col=getNumberValue(ccol, 1);
     var vy=row<0?0:(row>=this.rows?this.rows-1:row-1);
     var vx=col<0?0:(col>=this.cols?this.cols-1:col-1);
     this.x=vx;
@@ -702,21 +703,34 @@ Terminal.prototype._code_RI=function(){
     this._move_up(1);
 }
 
-Terminal.prototype._code_CUU=function(num){
+Terminal.prototype._code_CUU=function(parnum){
+    var num=getNumberValue(parnum, 1);
     //move cursor up
-    var n=num<1?1:(num>this.rows?this.rows:num);
-    this._move_up(n);
+    var n=(num>this.rows?this.rows:num);
+    this._cursor_up(n);
 }
 Terminal.prototype._code_DA=function(){
-    this.call_output("\x21[?6c");
+    this.call_output("\x1b[?6c");
 }
 
 Terminal.prototype._code_DCH=function(num){
     //delete characters on current line
-    for(var i=this.x;i<this.cols && i-this.x<num;i++){
-        var idx=this.y*this.cols+i;
-        this.scrt[idx]=NULL_TXT;
-        this.scra[idx]=DEFAULT_ATTR;
+    /*Deletes Pn characters, starting with the character at cursor position. 
+    When a character is deleted, all characters to the right of cursor move left. 
+    This creates a space character at right margin. This character has same character attribute as the last character moved left.
+    */
+    var length=getNumberValue(num,1);
+    //move text left
+    var idx=this.y*this.cols+this.x;
+    var end=(this.y+1)*this.cols;
+    for(var i=idx;i<end;i++){
+         var srcidx=i+length;
+         if(srcidx<end){
+            this.scrt[i]=this.scrt[srcidx];
+         }else{
+            this.scrt[i]=NULL_CHAR_CODE;
+            this.scra[i]=DEFAULT_ATTR;
+         }
     }
 }
 
@@ -728,8 +742,8 @@ Terminal.prototype._code_DCS=function(){
 Terminal.prototype._code_DECSTBM=function(top,bottom){
     //set scrolling region, paramete index is start from 1 not zero
     //e.g. ESC [1;24r
-    top=setDefaultValue(top,1);
-    bottom=setDefaultValue(bottom,this.rows);
+    top=getNumberValue(top,1);
+    bottom=getNumberValue(bottom,this.rows);
     var vtop=top<0?0:(top>=this.rows? this.rows-1:top-1);
     var vbott=bottom<0?0:(bottom>=this.rows?this.rows-1:bottom-1);
     if(vbott<vtop){
@@ -741,14 +755,35 @@ Terminal.prototype._code_DECSTBM=function(top,bottom){
     }
 }
 
+Terminal.prototype._code_DECAWM=function(num){
+//line auto wrap
+this.opts["LINEWRAP"]=num;
+}
+
+Terminal.prototype._code_DECCOLM=function(num){
+    if(num==1){
+    //mode  ESC [?3h
+        this.cols=132;
+    }else{
+    //rest mode ESC[?3l
+        this.cols=80;
+    }
+    this.reset();
+}
+
 Terminal.prototype._code_DECTCEM=function(num){
     this.cursor=num;
 }
 
+
 Terminal.prototype._code_DL=function(num){
-    //delete lines, TODO
-    this._scroll_content_up(this.y,num);
+    /*
+    DL causes the contents of the active line (the line that contains the active presentation position) and, depending on the setting of the LINE EDITING MODE (VEM), the contents of the n-1 preceding or following lines to be removed from the presentation component, where n equals the value of Pn.
+    */
+    var line=getNumberValue(num,1);
+    this._scroll_content_up(this.y,this._scrollbottom,line);
 }
+
 Terminal.prototype._code_DSR=function(num){
     //device status report
     if(num==6){
@@ -759,76 +794,63 @@ Terminal.prototype._code_DSR=function(num){
     }
     
 }
-Terminal.prototype._code_ED=function(num){
+
+Terminal.prototype._code_ECH=function(num){
+    //erase characters on current line
+    var length=getNumberValue(num,1);
+    if(length+this.x>this.cols){
+        length=this.cols-this.x;
+    }
+    this.scrt.batchUpdate(this.y*this.cols+this.x, length,NULL_CHAR_CODE);
+    this.scra.batchUpdate(this.y*this.cols+this.x, length,DEFAULT_ATTR);   
+}
+
+Terminal.prototype._code_ED=function(type){
     //erase display
     //0 the active presentation position and the character positions up to the end of the page are put into the erased state
     //1 the character positions from the beginning of the page up to and including the active presentation position are put into the erased state
     //2 all character positions of the page are put into the erased state
-    num = setDefaultValue(num,0);
+    var num = getNumberValue(type,0);
     //Wipe-cursor-to-end is the same as clear-whole-screen if cursor at top left
     if(this.x==0 && this.y==0 && num==0){
         //user run clear will tigger ESC[H ESC[J (set cursor to zero and erase display)
         num=2;
     }
-    if(num==0){//0 = cursor to end  
-        for(var i=this.x;i<this.cols;i++){
-            var idx=this.y*this.cols+i;
-            this.scrt[idx]=NULL_TXT;
-            this.scra[idx]=DEFAULT_ATTR;
-        }
-        for(var j=this.y;j<this.rows;j++){
-            for(var i=0;i<this.cols;i++){
-                var idx=j*this.cols+i;
-                this.scrt[idx]=NULL_TXT;
-                this.scra[idx]=DEFAULT_ATTR; 
-            }
-        }
-    }else if(num==1){//clear begin to cursor        
-        for(var j=0;j<this.y;j++){
-            for(var i=0;i<this.cols;i++){
-                var idx=j*this.cols+i;
-                this.scrt[idx]=NULL_TXT;
-                this.scra[idx]=DEFAULT_ATTR; 
-            }
-        }
-        for(var i=0;i<=this.x;i++){
-            var idx=this.y*this.cols+i;
-            this.scrt[idx]=NULL_TXT;
-            this.scra[idx]=DEFAULT_ATTR;
-        }
+    if(num==0){//0 from cursor to end of screen, including cursor position.
+        var v_pos=this.y*this.cols+this.x;
+        var length=this.cols*this.rows-v_pos;
+        this.scrt.batchUpdate(v_pos, length,NULL_CHAR_CODE);
+        this.scra.batchUpdate(0, length,DEFAULT_ATTR);     
+    }else if(num==1){//1 from beginning of screen to cursor
+        var length=this.y*this.cols+this.x+1;
+        this.scrt.batchUpdate(0, length,NULL_CHAR_CODE);
+        this.scra.batchUpdate(0, length,DEFAULT_ATTR); 
     }else{
         //clear all, set default screen
-        for(var i=0;i<this.scra.length;i++){
-            this.scrt[i]=NULL_TXT;  
-            this.scra[i]=DEFAULT_ATTR;
-        }
+        this.scrt.batchUpdate(0, this.rows*this.cols,NULL_CHAR_CODE);
+        this.scra.batchUpdate(0, this.rows*this.cols,DEFAULT_ATTR); 
     }
 }
 
-Terminal.prototype._code_EL=function(num){//erase line
+Terminal.prototype._code_EL=function(num){
+    //erase line
     //0 the active presentation position and the character positions up to the end of the line are put into the erased state
     //1 the character positions from the beginning of the line up to and including the active presentation position are put into the erased state
     //2 all character positions of the line are put into the erased state
-    num=setDefaultValue(num,0);
-    //console.log("erase line with parameter"+num);
-    if(num==0){//0 = cursor to end  
-        for(var i=this.x;i<this.cols;i++){
-            var idx=this.y*this.cols+i;
-            this.scrt[idx]=NULL_TXT;
-            this.scra[idx]=DEFAULT_ATTR;
-        }
-    }else if(num==1){//clear begin to cursor        
-        for(var i=0;i<=this.x;i++){
-            var idx=this.y*this.cols+i;
-            this.scrt[idx]=NULL_TXT;
-            this.scra[idx]=DEFAULT_ATTR;
-        }
+    var lineBegin=this.y*this.cols;
+    var pnum=getNumberValue(num,0);    
+    if(pnum==0){
+        //0 = cursor to end
+        var length=this.cols-this.x;//including current position
+        this.scrt.batchUpdate(lineBegin+this.x,length,NULL_CHAR_CODE);
+        this.scra.batchUpdate(lineBegin+this.x,length,DEFAULT_ATTR);
+    }else if(pnum==1){//clear begin to cursor(including)
+        this.scrt.batchUpdate(lineBegin,this.x+1,NULL_CHAR_CODE);
+        this.scra.batchUpdate(lineBegin,this.x+1,DEFAULT_ATTR);
     }else{
         //clear all, set default screen,2 = whole line
-        for(var i=0;i<this.cols.length;i++){
-            this.scrt[i+this.y*this.cols]=NULL_TXT;  
-            this.scra[i+this.y*this.cols]=DEFAULT_ATTR;
-        }
+        this.scrt.batchUpdate(lineBegin,this.cols,NULL_CHAR_CODE);
+        this.scra.batchUpdate(lineBegin,this.cols,DEFAULT_ATTR);
     }
 }
 Terminal.prototype._code_ESC=function(){//start escape sequence
@@ -838,8 +860,6 @@ Terminal.prototype._code_ESC=function(){//start escape sequence
         return;
     }
     this._code_default("ESC");
-    //test
-    //console.log("in _code_ESC "+this._inesc);
 }
 Terminal.prototype._code_LF=function(){
     if(this.opts['LFTOCRLF']==1){
@@ -875,14 +895,15 @@ Terminal.prototype._code_ICH=function(num){
     for(var i=0;i+num<this.cols && i<num;i++){
         var idx=this.y*this.cols+i;
         this.scra[idx]=DEFAULT_ATTR;
-        this.scrt[idx]=NULL_TXT;
+        this.scrt[idx]=NULL_CHAR_CODE;
     }    
 }
 
 Terminal.prototype._code_IL=function(num){
+    //insert blank lines
     //The previous contents of the active line and of adjacent lines are shifted away from the active line. 
     //The contents of n lines at the other end of the shifted part are removed.
-    this._scroll_content_down(this.y,num);
+    this._scroll_content_down(this.y,this.scrollbottom,num);
 }
 
 Terminal.prototype._code_default=function(msg){
@@ -910,12 +931,11 @@ Terminal.prototype._toggle_mode=function(){
     //set/reset modes
     var flag=arguments[0];
     var modeArray=arguments[1];
-    for(var i=0;i<modeArray.length;i++){
+    for(var i=0;i<modeArray.length;i++){       
         var name=this._modeseq[modeArray[i]] || "";
         var func=this._funcs[name];
         this._code_default("");
         if(typeof func !="undefined"){
-            //console.log("mode function "+ func+" flag"+flag);
             this[func].call(this,flag);
         }
     }
@@ -1015,16 +1035,17 @@ Terminal.prototype._code_SGR=function(){
 }
 
 Terminal.prototype._code_VPA=function(num){
-    num=setDefaultValue(num,1);
+    num=getNumberValue(num,1);
     //move to row (current column)
     var n=num>=this.rows?this.rows-1:(num<0?0:num-1);
     this.y=n;
 }
+
 Terminal.prototype._code_DECALN=function(num,attr){
-    //fill screen with E's
+    //fill screen with E
     for(var i=0; i<this.scra.length;i++){
         this.scra[i]=DEFAULT_ATTR;
-        this.scrt[i]="E";
+        this.scrt[i]=69; //E ascii is 69
     }
     this.x=0;
     this.y=0;
@@ -1073,13 +1094,30 @@ Terminal.prototype._code_IGN=function(){
     //no action
     }
     
+Terminal.prototype.dumpText=function(){
+ var txt="";
+   for (var i=0;i<this.rows;i++){
+        for(var j=0;j<this.cols;j++){
+            var idx=i*this.cols+j;
+            var ch=this.scrt[idx];
+            if(ch==0){
+                txt+=" ";
+            }
+            else {
+                txt+=String.fromCharCode(this.scrt[idx]);
+            }
+        }
+        txt+="\n";
+   }
+    return txt;
+}   
+
 Terminal.prototype.dumpHTML=function(){
     //move cursor to next if reach line end, cursor will not show if out of screen
-    var cx=(this.x==this.cols-1?0:this.x);    
-    var cy=(this.x==this.cols-1?this.y+1:this.y);
+    var cx=this.x;    
+    var cy=this.y;
     var previous_attr=-1;
     var dhtml="";
-    //console.log("consor pos x:y=" +cx +":"+cy );
     for (var i=0;i<this.rows;i++){
         for(var j=0;j<this.cols;j++){
             var idx=i*this.cols+j;
@@ -1121,12 +1159,12 @@ Terminal.prototype.dumpHTML=function(){
             }else if(ch==62){
                 dhtml+='&gt;';
             }
-            else if(ch==NULL_TXT){
+            else if(ch==0){
                 dhtml+="\u0020";
             }else {
             //TODO fix for UTF8
-            //console.log(idx+"  char "+ch.toString(16));
-                dhtml+=String.fromCharCode(ch);
+            dhtml+= String.fromCharCode(ch);
+               // dhtml+=String.fromCharCode(ch);
             }            
         }
         //add new line
@@ -1136,15 +1174,21 @@ Terminal.prototype.dumpHTML=function(){
     return '<div y="'+cy+'" x="'+cx+'" />'+dhtml;
 }
 
-function setDefaultValue(par,val){
+function getNumberValue(par,defaultValue){
+    var result=par;
     if(typeof par =="undefined"){
-        return val;
+        return defaultValue;
     }else if((par instanceof Array || typeof par == "array") && par.length==1){
         //check if only have empty string which is returned by String.split
-        par=par[0];        
+        result=par[0];        
    }
-   if(typeof par=="string" && par.length==0){
-            return val;
+   if(typeof result=="string" && result.length==0){
+            return defaultValue;
    }
-    return par;
+   var pnum=Number(result);
+   if(pnum<defaultValue){
+        return defaultValue;
+   }else {
+        return Number(result);
+   }
 }

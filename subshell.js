@@ -7,61 +7,48 @@ var subShell = exports.subShell = function(rows,cols,ondata,onclose){
     env.TERM="vt100";
     console.log("env is "+env);
     this.backport=0;
-    var pty=this.openShell('/bin/bash',env,null,rows,cols);
-    this.stream=pty[0];
-    this.shell = pty[1];    
-    var term=new wterm.Terminal(cols,rows);    
-    this.stream.on('data', function (data) {
+    var pty=this.openShell('/bin/bash',env,rows,cols);    
+    this.sin=pty[0];
+    this.sout=pty[1];
+    this.shell = pty[2];    
+    var term=new wterm.Terminal(rows,cols,this.sin);    
+    this.sout.on('data', function (data) {
         term.process(data); 
         ondata(term.dumpHTML());
     });	
-    //check if Backporting
-    if(this.backport){
-        //not implement EventEmitter
-        console.log("backporting");
-        this.shell.onexit=function(){            
-            onclose();
-        }
-    }else{
-        this.shell.on("exit",function(){
+    this.shell.on("exit",function(){
             console.log("shell exit");
             onclose();
-        });	
-    }
+    });	
     this.tm=term;    
 }
 
-subShell.prototype.openShell=function(path, env,args,height,width){
-    var fds,child;
-    if(typeof binding["openpty"]=="Function"){
-        fds=binding.openpty();
-        //set windows size for slave
-        binding.setWindowSize(fds[1],height,width);
-        stream=initStream(fds[0]);
-        var spawn = require('child_process').spawn;
-        child = spawn(path, args, {
+subShell.prototype.openShell=function(path, env,height,width){
+    var stream_in,stream_out,child;
+    var spawn = require('child_process').spawn;
+    if(typeof binding["openpty"]=="function"){
+        var fds=binding.openpty();
+        //set windows size
+        binding.setWindowSize(fds[0],height,width);
+        stream_in=initStream(fds[0]);
+        stream_out=stream_in;
+        child = spawn(path, ["-l"], {
         env: env,
         customFds: [fds[1], fds[1], fds[1]],
         setsid: true
         });
         console.log("using node implement");
-    }else{
-        //backward compatible for node v0.2.3 which shiped with webos
-        //implemnt pty support and setsid call in spawn process
-        console.log("backward compatible");
-        var ptylibAddon = require('./ptyext');        
-        var child=new ptylibAddon.PseudoTerminal();
-        fds=child.openpty();
-        child.setWindowSize(fds[1],height,width);
-        stream=initStream(fds[0]);
-        //default implement
-        child.onexit = function(code, signal) {
-            console.log(" signal is "+signal);
-        }
-        this.backport=1;
-        child.spawn(path,args,fds[1]);
-    };
-    return [stream, child];
+      }else {
+        //change PS1 because in webos workfolder /media/cryptofs/apps/usr/palm/services/ is too long
+        env["PS1"]='\\$';
+        child = spawn('./ptyrun', ['-w'+width,'-h'+height,'/bin/sh','-l'], {
+        env: env
+        });
+        stream_out=child.stdout;
+        stream_in=child.stdin;
+        console.log("using ptyrun");
+      }   
+    return [stream_in,stream_out,child];
 }
 
 function initStream(fd){
@@ -72,7 +59,7 @@ var stream = require('net').Stream(fd);
 }
 
 subShell.prototype.Write = function(data){
-    var shStdin=this.stream;    
+    var shStdin=this.sin;    
     //process.binding('stdio').setRawMode(true);
     shStdin.resume();
     shStdin.write(data);
@@ -82,12 +69,11 @@ subShell.prototype.Write = function(data){
 
 subShell.prototype.Close= function(){
     console.log("called close");
-    stream.pause();
-    if(this.backport){
-        //not implement string to number convert, man 7 signal
-        this.shell.kill(9);
-    }else{
-        this.shell.kill('SIGKILL');
+    try {
+        //this.sin.pause();
+        this.shell.kill('SIGKILL');   
+    } catch (err) {
+         console.log(err);
     }
 }
 

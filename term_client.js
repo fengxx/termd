@@ -4,16 +4,16 @@ var termClient={};
 var specialKeys={
 			8: "backspace", 9: "tab", 13: "return", 19: "pause",
 			20: "capslock", 27: "esc", 32: "space", 33: "pageup", 34: "pagedown", 35: "end", 36: "home",
-			37: "left", 38: "up", 39: "right", 40: "down", 45: "insert", 46: "del", 
+			37: "left", 38: "up", 39: "right", 40: "down", 45: "insert", 46: "del", 47: "help",
 			96: "0", 97: "1", 98: "2", 99: "3", 100: "4", 101: "5", 102: "6", 103: "7",
 			104: "8", 105: "9", 106: "*", 107: "+", 109: "-", 110: ".", 111 : "/", 
 			112: "f1", 113: "f2", 114: "f3", 115: "f4", 116: "f5", 117: "f6", 118: "f7", 119: "f8", 
 			120: "f9", 121: "f10", 122: "f11", 123: "f12", 144: "numlock", 145: "scroll", 191: "/", 224: "meta"
 };
-termClient.Terminal=function(divid){
-    return new this.TermObj(divid);
+termClient.Terminal=function(divid,host,port){
+    return new this.TermObj(divid,host,port);
 }
-termClient.TermObj=function(divid){
+termClient.TermObj=function(divid,host,port){
     var keybuf=[];
     var socket,stimeout;
     var sending=0;
@@ -23,7 +23,7 @@ termClient.TermObj=function(divid){
     var speicalKeyInkeydown=0;
     function init() {
         div.appendChild(dterm);
-        setupSocket();
+        setupSocket(host,port);
         stimeout=window.setTimeout(update,100);
         //check version
         if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1){
@@ -36,18 +36,26 @@ termClient.TermObj=function(divid){
         }
     }
       
-    function setupSocket(){
+    function setupSocket(host,port){
         //check if in local debug
-        console.log(window.location.protocol)
-        if(window.location.protocol=="file:"){
+        console.log(window.location.protocol +" host is "+host);
+        if(typeof host=="undefined" && window.location.protocol=="file:"){
             console.log("not run on server,local debug")
            //disable send
            sending=1;
            return;
         }
-        socket = new io.Socket(null, {
-            rememberTransport: false
-        });
+        if(typeof host !="undefined" && typeof port!="undefined" ){
+            socket = new io.Socket(host, {
+                "rememberTransport": false,
+                "port":port
+            });
+            console.log("setup socket for "+host +" port:"+port);
+        }else {
+            socket = new io.Socket(null, {
+                rememberTransport: false
+            });
+        }
         socket.connect();
         socket.on('message', function(obj){
             if('term' in obj){
@@ -87,7 +95,7 @@ termClient.TermObj=function(divid){
         if(typeof(s)=='undefined'){
             return;
         }
-        console.log(s);
+        //console.log(s);
         keybuf.unshift(s);
         if(sending==0) {
             window.clearTimeout(stimeout);
@@ -119,7 +127,6 @@ In the default mode, labelled ESC [n~, the function keys generate sequences like
             ev.which = ev.charCode != null ? ev.charCode : ev.keyCode;
         }
 		var kc=ev.which,k="";
-        console.log(kc);
 		if (ev.altKey) { //alt key
 			if (kc>=65 && kc<=90)
 				kc+=32;
@@ -153,11 +160,6 @@ In the default mode, labelled ESC [n~, the function keys generate sequences like
 				else if (kc==40) k="[B";    // Down
 				else if (kc==45) k="[2~";   // Ins
 				else if (kc==46) k="[3~";   // Del
-                else if(kc>=96 && kc <=111){
-                //numpad 0-9 *+-./
-                // from DOM_VK_NUMPAD0 to DOM_VK_DIVIDE
-                    k=specialKeys[kc];
-                }
 				else if (kc==112) k="[[A";  // F1
 				else if (kc==113) k="[[B";  // F2
 				else if (kc==114) k="[[C";  // F3
@@ -170,9 +172,14 @@ In the default mode, labelled ESC [n~, the function keys generate sequences like
 				else if (kc==121) k="[21~"; // F10
 				else if (kc==122) k="[23~"; // F11
 				else if (kc==123) k="[24~"; // F12
+                else if (kc==191 && ev.shiftKey) k="?";
 				if (k.length>=2) {
 					k=String.fromCharCode(27)+k;
-				}
+				}else if (k.length==0 && typeof specialKeys[kc] !="undefined" && specialKeys[kc].length==1){
+                     //console.log("key code is "+kc);
+                    //all the others k=specialKeys[kc]; from DOM_VK_NUMPAD0 to DOM_VK_DIVIDE and /
+                    k=specialKeys[kc];
+                }
 			}else{
                     k=String.fromCharCode(kc);
             }
@@ -195,7 +202,7 @@ In the default mode, labelled ESC [n~, the function keys generate sequences like
                 if(ev.which==45 && ev.ctrlKey){
                     return false;
                 }
-                console.log("keydown delegate to keypress");        
+                //console.log("keydown delegate to keypress");        
 				return this.keypress(ev);
 		}
         return false;
