@@ -1,0 +1,11 @@
+[
+    {   
+        "source": "app/assistants/stage-assistant.js"
+    },
+    {"source": "app/models/term_client.js"}, 
+    {"source": "app/models/wsocket_client.js"}, 
+    {
+        "scenes": "main",
+        "source": "app/assistants/main-assistant.js"
+    }
+]
