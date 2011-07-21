@@ -12,8 +12,12 @@ CFLAGS		:= $(CFLAGS)
 export	CROSS_COMPILE AS LD CC \
 	CPP AR NM STRIP OBJCOPY OBJDUMP MAKE AWK CFLAGS
 
-all: ptyrun.c
-	$(CC) $(CFLAGS) -o ptyrun   ptyrun.c
+objects = ttyrun ptyrun
 
+all: $(objects)
+
+$(objects): %: %.c
+	$(CC)  $(CFLAGS) $< -o $@
+    
 clean:
-	/bin/rm -f *.o *~ ptyrun
+	/bin/rm -f *.o *~ $(objects)
