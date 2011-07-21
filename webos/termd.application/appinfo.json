@@ -1,10 +1,10 @@
 {
-    "id": "com.fengxx.term",
-    "version": "1.0.0",
-    "vendor": "fengxx",
-    "type": "web",
-    "main": "index.html",
-    "title": "Service Call",
-    "icon": "icon.png",
-    "uiRevision":2
+	"id": "com.fengxx.term",
+	"version": "1.0.0",
+	"vendor": "Enyo",
+	"type": "web",
+	"main": "index.html",
+	"title": "Terminal",
+	"icon": "icon.png",
+	"uiRevision": 2
 }

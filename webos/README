@@ -1,0 +1,21 @@
+It has 2 parts
+1. A regular  application
+2. A JS service
+
+To install the complete package simply run the build script, the commands contained in the script are
+palm-package servicesample.application servicesample.srv servicesample.package 
+palm-install -r com.fengxx.term
+palm-install com.fengxx.term_1.0.0_all.ipk
+
+Once install the webos app can call the service by using the call
+
+In Mojo
+    this.controller.serviceRequest("palm://com.fengxx.term.service", {
+      method: "runshell",
+      parameters: {"subscribe":true},
+      onSuccess:this.serviceSuccess.bind(this),
+      onFailure:this.serviceFailure.bind(this)
+    });
+
+In Enyo
+	{kind: "enyo.PalmService", service: "palm://com.fengxx.term.service", method: "runshell", subscribe: true, onSuccess: "status", onFailure: "fail"},

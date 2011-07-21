@@ -5,13 +5,19 @@ fs = require('fs'),
 io = require('socket.io'),
 QueryString=require("querystring"),
 sh=require("./subshell");
+extLog=require("./Logger");
 
-       
+var logger=new extLog.Logger(1,"/tmp/debug_term.log");
+logger.hook();
+logger.log(require.paths);
+//check console
+console.log("you should see it in log file");
+ 
 var server = http.createServer(function(req, res){
     var path = url.parse(req.url).pathname;
     path= (path=="/"?"/term.html":path);
     path= (path=="/wsocket_client.js"?"/lib/wsocket_client.js":path);
-    console.log("req "+path);
+    logger.log("req "+path);
     switch (path){		
         case '/term_client.js':
         case '/term_client.css':
@@ -58,7 +64,8 @@ var terminateProcess=function(){
             }
         }
         //exit process
-        console.log("clean up and exit");
+        logger.log("clean up and exit");
+        logger.close()
         process.exit(0);
 }
 //Interrupt from keyboard
@@ -71,32 +78,36 @@ process.on('SIGTERM', terminateProcess);
 process.on('SIGPIPE', terminateProcess);
 
 process.addListener('uncaughtException', function (err) {
-  console.log('Caught exception: ' + err);
+  logger.log('Caught exception: ' + err);
 });
 
 
-server.listen(8180);
+server.listen(50530);
 var socketio = io.listen(server);		
 socketio.on('connection', function(client){
-    console.log("client is "+client.sessionId);
+    logger.log("client is "+client.sessionId);
+    logger.log("date at " +new Date() +" cwd "+process.cwd());  
     terms[client.sessionId]=new sh.subShell(50,132,
-        function(output){
-            //console.log(output);
-            client.send({
-                term:output
-            });
-        },
-        function(){
-            console.log("client will be closed");
-            client._onClose();
-            //remove from list
-            if(typeof terms[client.sessionId] !="undefined") {
-               terms[client.sessionId]=null;
-               delete terms[client.sessionId];
+            function(output){
+                //logger.log(output);
+                client.send({
+                    term:output
+                });
+            },
+            function(){
+                logger.log("client "+client.sessionId+"will be closed");
+                client._onClose();
+                //remove from list
+                if(typeof terms[client.sessionId] !="undefined") {
+                   terms[client.sessionId]=null;
+                   delete terms[client.sessionId];
+                }
             }
-        }
         );
-        
+    terms[client.sessionId].shell.on("exit",function(code, signum){
+            logger.log("Exited with " + (code == null ? "no exit code" : code) + (signum == null ? " no signum" : ", signal " + signum))
+    });
+    logger.log("terminal started");
     //add outputs    
     client.on('message', function(message){
         //process input
@@ -106,9 +117,8 @@ socketio.on('connection', function(client){
             }
         }
    );
-
     client.on('disconnect', function(){
-        console.log("client exit");
+        logger.log("client exit");
         if(typeof terms[client.sessionId] !="undefined" && terms[client.sessionId] !=null){
             terms[client.sessionId].Close();
         }

@@ -1,0 +1,1 @@
+palm-launch -c  com.fengxx.term

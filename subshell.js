@@ -41,20 +41,21 @@ subShell.prototype.openShell=function(path, env,height,width){
       }else {
         //change PS1 because in webos workfolder /media/cryptofs/apps/usr/palm/services/ is too long
         env["PS1"]='\\$';
-        child = spawn('./ptyrun', ['-w'+width,'-h'+height,'/bin/sh','-l'], {
+        child = spawn('./backport/ptyrun', ['/bin/sh'], {
         env: env
         });
         stream_out=child.stdout;
         stream_in=child.stdin;
         console.log("using ptyrun");
-      }   
+      }
+    //resume stdin   
+    stream_in.resume();
     return [stream_in,stream_out,child];
 }
 
 function initStream(fd){
 var stream = require('net').Stream(fd);
     stream.readable = stream.writable = true;
-    stream.resume();
     return stream;
 }
 

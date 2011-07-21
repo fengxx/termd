@@ -1,0 +1,16 @@
+{
+"id": "com.fengxx.term.service",
+"description": "term Service",
+"engine":"node", 
+"services": [ {
+    "name": "com.fengxx.term.service",
+    "description": "term service",
+    "commands": [ { 
+            "name": "runshell", 
+            "subscribe": true,
+            "assistant": "TerminalAssistant",
+			"public": true
+             }
+           ] 
+        }]
+}
