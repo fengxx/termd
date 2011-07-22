@@ -10,7 +10,7 @@
   <body>    
     <script>
         window.onload=function() {
-            t=termClient.Terminal("term");
+            t=termClient.Terminal("termtxt");
             document.onkeypress=t.keypress;
             document.onkeydown=function(){
                 t.keydown();
@@ -18,9 +18,9 @@
             document.onkeyup=t.keyup;
         };
     </script>   
-<div>   
+<div id="termwin">   
 <div id="status"></br><p>Connecting...</p></div>
-<pre id="term">
+<pre id="termtxt">
 </pre>   
 </div>
    

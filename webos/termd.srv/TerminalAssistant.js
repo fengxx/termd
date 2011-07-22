@@ -2,7 +2,6 @@ function TerminalAssistant() {
 }
 
 TerminalAssistant.prototype.setup=function(){
-    this.inv=2000;
     this.setupTerm();
 }
 
@@ -19,7 +18,7 @@ TerminalAssistant.prototype.run=function(future, subscription) {
             f.result = {
                 "keepalive": t
             };
-        }, self.inv);
+        }, 600);
 }
 
 TerminalAssistant.prototype.cancelSubscription=function(){

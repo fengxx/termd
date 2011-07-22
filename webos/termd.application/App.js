@@ -25,10 +25,6 @@ enyo.kind({
 		this.$.console.addContent("> cancelled<br/>");
 	},
 	status: function(inSender, inResponse) {
-        // this.controller.serviceRequest('palm://com.palm.applicationManager', {
-            // method: 'open',
-            // parameters: { target: inResponse.html }
-        // });
         window.location = inResponse.html;
 		this.$.console.setContent( "<a href='"+inResponse.html+"'> Open Terminal </a>");
 	},

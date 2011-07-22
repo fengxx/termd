@@ -4,13 +4,16 @@ padding:0;
 }
 
 
-#term {
-position:absolute;
-margin:0;
-padding:0;
-minimum-height:264px;
+#termwin {
+margin-left: auto ;
+margin-right: auto ;
+width:90%;
+}
+
+#termtxt{
 font:12px Andale Mono, monospace;
 white-space:pre;
+clear:left;
 }
 
 span.ul { text-decoration: underline; }

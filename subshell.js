@@ -1,13 +1,16 @@
 var binding = process.binding('stdio');
-var wterm=require("./vt102.js");
+var wterm=require("./vt102"),fs = require('fs');
 var subShell = exports.subShell = function(rows,cols,ondata,onclose){
     var env={};
     env.COLUMNS=cols;
     env.LINES=rows;
     env.TERM="vt100";
     console.log("env is "+env);
+    if(!checkptmx()){
+        return;
+    };
     this.backport=0;
-    var pty=this.openShell('/bin/bash',env,rows,cols);    
+    var pty=this.openShell('/bin/sh',env,rows,cols);    
     this.sin=pty[0];
     this.sout=pty[1];
     this.shell = pty[2];    
@@ -41,7 +44,7 @@ subShell.prototype.openShell=function(path, env,height,width){
       }else {
         //change PS1 because in webos workfolder /media/cryptofs/apps/usr/palm/services/ is too long
         env["PS1"]='\\$';
-        child = spawn('./bin/ptyrun', ['-w'+width,'-h'+height,'/bin/sh'], {
+        child = spawn('./bin/ptyrun', ['-w'+width,'-h'+height,path], {
         env: env
         });
         stream_out=child.stdout;
@@ -80,4 +83,16 @@ subShell.prototype.Close= function(){
 
 subShell.prototype.getOutput= function(){
     return this.tm.dumpHTML();
+}
+function checkptmx(){
+    var ptmx="/dev/ptmx";
+    var st=fs.lstatSync(ptmx);
+    console.log("st"+st);
+    if(st.isCharacterDevice()){
+        console.log("device "+ptmx+" exists");
+        return true;
+    }else{
+        console.log("device "+ ptmx+" doesn't exists");
+        return false;
+    }
 }

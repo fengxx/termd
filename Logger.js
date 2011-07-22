@@ -9,7 +9,7 @@ var Logger=exports.Logger=function(enabled,file){
 }
 
 Logger.prototype.log=function(msg){
-   //console.log("in" +(this.logfile !=-1));
+   process.stdout.write(msg+"\n");
    if(this.enabled== 1 && this.logfile !=-1){       
         this.logfile.write(msg+"\n");
    }
@@ -25,8 +25,8 @@ Logger.prototype.hook=function(){
     var self=this;
     if(this.enabled==1 && this.logfile !=-1){
         console.log=function(msg){
-            self.log(msg+"\n");
-            process.stdout.write(msg+"\n");
+            self.log(msg);
+            //process.stdout.write(msg+"\n");
         }
     }
 }

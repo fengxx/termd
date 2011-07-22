@@ -87,7 +87,7 @@ var socketio = io.listen(server);
 socketio.on('connection', function(client){
     logger.log("client is "+client.sessionId);
     logger.log("date at " +new Date() +" cwd "+process.cwd());  
-    terms[client.sessionId]=new sh.subShell(50,132,
+    terms[client.sessionId]=new sh.subShell(40,132,
             function(output){
                 //logger.log(output);
                 client.send({
