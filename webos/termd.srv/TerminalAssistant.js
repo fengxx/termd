@@ -19,7 +19,7 @@ TerminalAssistant.prototype.run=function(future, subscription) {
             f.result = {
                 "keepalive": t
             };
-        }, 500);
+        }, self.inv);
 }
 
 TerminalAssistant.prototype.cancelSubscription=function(){
@@ -32,5 +32,5 @@ TerminalAssistant.prototype.setupTerm=function(){
         require = IMPORTS.require;
         require.paths.unshift(process.cwd()); 
     }
-    require('termd.js');
+    require('termd');
 };

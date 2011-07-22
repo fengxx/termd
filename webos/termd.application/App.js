@@ -10,7 +10,7 @@ enyo.kind({
 		]},
 		{flex: 1, kind: "Scroller", style: "background-color: gray;", components: [
 			{components: [
-				{name: "console", kind: "HtmlContent", style: "font-size: 10pt; background-color: black;"}
+				{name: "console", kind: "HtmlContent", style: "font-size: 10pt; background-color: white;"}
 			]}
 		]}
 	],
