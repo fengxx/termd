@@ -41,7 +41,7 @@ subShell.prototype.openShell=function(path, env,height,width){
       }else {
         //change PS1 because in webos workfolder /media/cryptofs/apps/usr/palm/services/ is too long
         env["PS1"]='\\$';
-        child = spawn('./backport/ptyrun', ['/bin/sh'], {
+        child = spawn('./bin/ptyrun', ['-w'+width,'-h'+height,'/bin/sh'], {
         env: env
         });
         stream_out=child.stdout;
