@@ -1171,7 +1171,7 @@ Terminal.prototype.dumpHTML=function(){
         dhtml+="\n";
     }
     dhtml += "</span>\n";
-    return '<div y="'+cy+'" x="'+cx+'" />'+dhtml;
+    return '<div y="'+cy+'" x="'+cx+'" ></div>'+dhtml;
 }
 
 function getNumberValue(par,defaultValue){

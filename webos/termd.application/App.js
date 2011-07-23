@@ -4,8 +4,8 @@ enyo.kind({
 	components: [
 		{kind: "enyo.PalmService", service: "palm://com.fengxx.term.service", method: "runshell", subscribe: true, onSuccess: "status", onFailure: "fail"},
 		{kind: "HFlexBox", components: [
-			{kind: "Button", caption: "Connect Service", onclick: "go"},
-			{kind: "Button", caption: "Cancel Service", onclick: "cancel"}
+			{name:"startbtn", kind: "Button", caption: "Start Service", onclick: "go"},
+			{name:"stopbtn", kind: "Button", caption: "Stop Service", onclick: "cancel"}
 		]},
 		{flex: 1, kind: "Scroller", style: "background-color: gray;", components: [
 			{components: [
@@ -15,18 +15,26 @@ enyo.kind({
 	],
 	go: function() {
 		var request = this.$.palmService.call();
-        if(request.json.html) {
-            this.$.console.setContent( "<a name ='open it' src='"+request.json.html+"'>");
-         }
 	},
 	cancel: function() {
 		this.$.palmService.cancel();
-		this.$.console.addContent("> cancelled<br/>");
+		this.$.console.setContent("> cancelled<br/>");
 	},
 	status: function(inSender, inResponse) {
-        this.$.console.addContent(enyo.json.stringify(inResponse) + "<br/>");
-        //window.location = inResponse.html;
-		//this.$.console.setContent( "<a href='"+inResponse.html+"'> Open Terminal </a>");
+        if(inResponse.url){
+            //enyo.windows.openWindow(inResponse.url);
+            //window.location = inResponse.url;
+            window.open(inResponse.url, "_blank","location=0,status=0,scrollbars=1");
+            this.$.console.setContent( "<a href='"+inResponse.url+"'> Open Terminal </a>");
+            //disable the start button
+            //this.$.stopbtn.disabled=false;
+            //this.$.startbtn.disabled=true;
+        }
+        if(inResponse.heartbeat){
+            this.timestamp=inResponse.heartbeat;
+        }
+        //window.location = inResponse.url;
+		//this.$.console.setContent( "<a href='"+inResponse.url+"'> Open Terminal </a>");
 	},
 	fail: function(inSender, inResponse) {
 		this.$.console.addContent(enyo.json.stringify(inResponse) + "<br/>");

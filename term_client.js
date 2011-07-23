@@ -10,15 +10,16 @@ var specialKeys={
 			112: "f1", 113: "f2", 114: "f3", 115: "f4", 116: "f5", 117: "f6", 118: "f7", 119: "f8", 
 			120: "f9", 121: "f10", 122: "f11", 123: "f12", 144: "numlock", 145: "scroll", 191: "/", 224: "meta"
 };
-termClient.Terminal=function(divid,host,port){
-    return new this.TermObj(divid,host,port);
+termClient.Terminal=function(divid,status_id,host,port){
+    return new this.TermObj(divid,status_id,host,port);
 }
-termClient.TermObj=function(divid,host,port){
+termClient.TermObj=function(divid,status_id,host,port){
     var keybuf=[];
     var socket,stimeout;
     var sending=0;
     var specialKeyFired=null;
     var div=document.getElementById(divid);
+    var status_line=document.getElementById(status_id);
     var dterm=document.createElement('div');
     var speicalKeyInkeydown=0;
     function init() {
@@ -32,7 +33,7 @@ termClient.TermObj=function(divid,host,port){
     }
     function message(obj){
         if ('message' in obj)  {
-            document.getElementById('status').innerHTML = '<b>' + (obj.message[0]) + '</b> ';
+            status_line.innerHTML = '<b>' + (obj.message[0]) + '</b> ';
         }
     }
       
@@ -59,6 +60,7 @@ termClient.TermObj=function(divid,host,port){
         socket.connect();
         socket.on('message', function(obj){
             if('term' in obj){
+                console.log(obj.term);
                 dterm.innerHTML=obj.term;
             }
         });
@@ -74,6 +76,8 @@ termClient.TermObj=function(divid,host,port){
             message({
                 message: ['Disconnected']
             })
+            //clear screen
+            dterm.innerText="Session closed";
         });
         socket.on('reconnect', function(){
             message({
@@ -92,10 +96,10 @@ termClient.TermObj=function(divid,host,port){
         });
     }
     function queue(s) {
-        if(typeof(s)=='undefined'){
-            return;
-        }
         console.log(s);
+        if(typeof(s)=='undefined' ||s.length==0){
+            return;
+        }       
         keybuf.unshift(s);
         if(sending==0) {
             window.clearTimeout(stimeout);
