@@ -46,9 +46,6 @@ int forkpty_l (int *amaster,
     unlockpt(master_fd);
     char *slave_name;
     slave_name = ptsname(master_fd);
-    slave_fd = open(slave_name, O_RDWR|O_NOCTTY);
-    if (winp)
-    ioctl (slave_fd, TIOCSWINSZ, winp);
   if (amaster) {
     *amaster = master_fd; 
   }  
@@ -64,7 +61,15 @@ int forkpty_l (int *amaster,
         perror("can't fork pty");
       return -1; 
     case 0: /* Child */ 
-      close (master_fd);      
+      printf("child's process group id is %d\n", (int) getpgrp());
+      setsid();
+      printf("child's process group id is now %d\n", (int) getpgrp());
+      close (master_fd);
+      slave_fd = open(slave_name, O_RDWR|O_NOCTTY);
+      if (ioctl(slave_fd, TIOCSCTTY, (char *)0) < 0)
+			perror("TIOCSCTTY error");
+      if (winp)
+        ioctl (slave_fd, TIOCSWINSZ, winp);      
       dup2 (slave_fd, STDIN_FILENO); 
       dup2 (slave_fd, STDOUT_FILENO); 
       dup2 (slave_fd, STDERR_FILENO); 
@@ -221,7 +226,6 @@ int main(int argc, char *argv[]){
       exit (EXIT_FAILURE); 
     case 0: /* This is the child process */ 
       //set_noecho(STDIN_FILENO);   /* stdin is slave pty */
-      setsid();
       if (execvp(argv[optind], &argv[optind]) < 0) {
         perror("exec()"); /* Since exec* never return */ 
       }
