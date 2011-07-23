@@ -11,9 +11,8 @@ width:90%;
 }
 
 #termtxt{
-font:12px Andale Mono, monospace;
 white-space:pre;
-clear:left;
+clear:both;
 }
 
 span.ul { text-decoration: underline; }

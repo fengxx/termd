@@ -1,4 +1,3 @@
-/* Copyright 2009-2011 Hewlett-Packard Development Company, L.P. All rights reserved. */
 enyo.kind({
 	name: "App",
 	kind: enyo.VFlexBox,
@@ -25,8 +24,9 @@ enyo.kind({
 		this.$.console.addContent("> cancelled<br/>");
 	},
 	status: function(inSender, inResponse) {
-        window.location = inResponse.html;
-		this.$.console.setContent( "<a href='"+inResponse.html+"'> Open Terminal </a>");
+        this.$.console.addContent(enyo.json.stringify(inResponse) + "<br/>");
+        //window.location = inResponse.html;
+		//this.$.console.setContent( "<a href='"+inResponse.html+"'> Open Terminal </a>");
 	},
 	fail: function(inSender, inResponse) {
 		this.$.console.addContent(enyo.json.stringify(inResponse) + "<br/>");

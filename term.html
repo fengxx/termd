@@ -17,12 +17,16 @@
             };
             document.onkeyup=t.keyup;
         };
+        document.getElementById("keyinput").focus();
     </script>   
 <div id="termwin">   
-<div id="status"></br><p>Connecting...</p></div>
+<div id="status"></br><p>Connecting...</p>
+<form >
+<input id="keyinput" type="text" name="field" size="1" style="background:white; border: 0px">  
+</form>
+</div>
 <pre id="termtxt">
 </pre>   
-</div>
-   
+</div> 
 </body>
 </html>

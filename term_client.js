@@ -95,7 +95,7 @@ termClient.TermObj=function(divid,host,port){
         if(typeof(s)=='undefined'){
             return;
         }
-        //console.log(s);
+        console.log(s);
         keybuf.unshift(s);
         if(sending==0) {
             window.clearTimeout(stimeout);
