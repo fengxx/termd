@@ -14,6 +14,7 @@ termClient.Terminal=function(divid,status_id,host,port){
     return new this.TermObj(divid,status_id,host,port);
 }
 termClient.TermObj=function(divid,status_id,host,port){
+    var self=this;
     var keybuf=[];
     var socket,stimeout;
     var sending=0;
@@ -60,7 +61,7 @@ termClient.TermObj=function(divid,status_id,host,port){
         socket.connect();
         socket.on('message', function(obj){
             if('term' in obj){
-                console.log(obj.term);
+                //console.log(obj.term);
                 dterm.innerHTML=obj.term;
             }
         });
@@ -95,7 +96,7 @@ termClient.TermObj=function(divid,status_id,host,port){
             })
         });
     }
-    function queue(s) {
+    this.queue=function(s){
         console.log(s);
         if(typeof(s)=='undefined' ||s.length==0){
             return;
@@ -105,8 +106,7 @@ termClient.TermObj=function(divid,status_id,host,port){
             window.clearTimeout(stimeout);
             stimeout=window.setTimeout(update,1);
         }
-    }
-    
+    }    
     function update() {
         if(sending==0) {
             sending=1;
@@ -121,7 +121,7 @@ termClient.TermObj=function(divid,status_id,host,port){
         }        
     }
     /** Below is from putty document
-In the default mode, labelled ESC [n~, the function keys generate sequences like ESC [11~, ESC [12~ and so on. This matches the general behaviour of Digital's terminals. 
+ In the default mode, labelled ESC [n~, the function keys generate sequences like ESC [11~, ESC [12~ and so on. This matches the general behaviour of Digital's terminals. 
  In Linux mode, F6 to F12 behave just like the default mode, but F1 to F5 generate ESC [[A through to ESC [[E. This mimics the Linux virtual console. 
 */ 
 	this.keypress=function(ev) {
@@ -188,7 +188,7 @@ In the default mode, labelled ESC [n~, the function keys generate sequences like
                     k=String.fromCharCode(kc);
             }
 		}
-		queue(escape(k));		
+		self.queue(escape(k));		
 		ev.cancelBubble=true;
 		if (ev.stopPropagation) ev.stopPropagation();
 		if (ev.preventDefault)  ev.preventDefault();
