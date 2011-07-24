@@ -12,6 +12,13 @@ html, body, input, button {
 	cursor: default;
 }
 
+table,tr,td {
+	border-width: 0px;
+    border-spacing: 0px;
+    border-collapse:collsapse;
+    padding: 0px;
+}
+
 pre,div,form{
     margin: 0;
     padding: 0;
@@ -20,21 +27,16 @@ pre,div,form{
 #termwin {
 margin-left: auto ;
 margin-right: auto ;
-width:980px;
 overflow: auto;
+border-width: 0px;
+height: 350px;
 }
 
-#termtxt{
-width:90%;
+pre{
 font-family:Courier,Courier New,monospace;
 white-space:pre;
-clear:both;
-font-size: 1.0rem;
-}
-
-.statusbar{
-	float:left;
-	position:relative;
+display: inline-block;
+border-width:0px;
 }
 
 span.ul { text-decoration: underline; }
@@ -77,7 +79,6 @@ span.b15 { background:  white;}
 
 .button {
 	font-size: 11px;
-	line-height: 20px;
 	text-align: center;
     border-style:none;
     -webkit-border-image: url(./image/button-up.png) 4 4 4 4 stretch stretch;

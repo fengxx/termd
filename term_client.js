@@ -19,12 +19,10 @@ termClient.TermObj=function(divid,status_id,host,port){
     var socket,stimeout;
     var sending=0;
     var specialKeyFired=null;
-    var div=document.getElementById(divid);
     var status_line=document.getElementById(status_id);
-    var dterm=document.createElement('div');
+    var dterm=document.getElementById(divid);
     var speicalKeyInkeydown=0;
     function init() {
-        div.appendChild(dterm);
         setupSocket(host,port);
         stimeout=window.setTimeout(update,100);
         //check version

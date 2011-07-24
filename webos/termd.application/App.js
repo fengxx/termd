@@ -5,7 +5,7 @@ enyo.kind({
 		{kind: "enyo.PalmService", service: "palm://com.fengxx.term.service", method: "runshell", subscribe: true, onSuccess: "status", onFailure: "fail"},
 		{kind: "HFlexBox", components: [
 			{name:"startbtn", kind: "Button", caption: "Start Service", onclick: "go"},
-			{name:"stopbtn", kind: "Button", caption: "Stop Service", onclick: "cancel"}
+			{name:"stopbtn", kind: "Button", caption: "Stop Service", onclick: "cancel","disabled":true}
 		]},
 		{flex: 1, kind: "Scroller", style: "background-color: gray;", components: [
 			{components: [
@@ -17,26 +17,52 @@ enyo.kind({
 		var request = this.$.palmService.call();
 	},
 	cancel: function() {
-		this.$.palmService.cancel();
-		this.$.console.setContent("> cancelled<br/>");
+        //ajax call the stop function
+        var self=this;
+        enyo.xhrGet({
+            url: self.url+"/admin/stop",
+            load:function(){
+                self.$.palmService.cancel();
+                self.$.console.setContent("> cancelled<br/>");
+                self.setServiceStopped(true);
+                }
+        });
 	},
 	status: function(inSender, inResponse) {
         if(inResponse.url){
             //enyo.windows.openWindow(inResponse.url);
             //window.location = inResponse.url;
+            this.url=inResponse.url;
             window.open(inResponse.url, "_blank","location=0,status=0,scrollbars=1");
-            this.$.console.setContent( "<a href='"+inResponse.url+"'> Open Terminal </a>");
-            //disable the start button
-            //this.$.stopbtn.disabled=false;
-            //this.$.startbtn.disabled=true;
+            this.$.console.setContent( "<a href='"+inResponse.url+"' onclick='window.open(this.href)'> Open Terminal </a>");
+            this.setServiceStopped(false);
+            setTimeout(enyo.bind(this, "checkAlive"), 300);
         }
         if(inResponse.heartbeat){
             this.timestamp=inResponse.heartbeat;
+            //this.$.console.addContent(timestamp + "<br/>");
         }
-        //window.location = inResponse.url;
-		//this.$.console.setContent( "<a href='"+inResponse.url+"'> Open Terminal </a>");
 	},
 	fail: function(inSender, inResponse) {
 		this.$.console.addContent(enyo.json.stringify(inResponse) + "<br/>");
-	}
+	},
+    checkAlive: function(){
+        var t=Number(new Date());
+        console.log("t:"+t +" live:"+this.timestamp);
+        //2 minutes
+        if(this.timestamp && t-this.timestamp> 120000){
+            this.$.console.setContent(">no response<br/>");
+            //cancel request
+            this.$.palmService.cancel();
+            this.setServiceStopped(true);
+        }else{
+            setTimeout(enyo.bind(this, "checkAlive"), 25000);
+        }
+    },
+    setServiceStopped: function(flag){
+            this.$.stopbtn.disabled=flag;
+            this.$.startbtn.disabled=!flag;
+            this.$.stopbtn.disabledChanged();
+            this.$.startbtn.disabledChanged();
+    }
 });

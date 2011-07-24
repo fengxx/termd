@@ -30,24 +30,39 @@
             document.getElementById("sendKey").className=(disable?"button-disabled":"button");
        }
     </script>   
-<div id="termwin">
-    <form>
-        <input id="fakebtn" type="text" value="Show Keyboard" name="keyInput" class="button" />
-        <select id="customKey" onchange="selectKey()">
-            <!--option value is ASCII code --->
-            <option value="" >Speical Key</option>
-            <option value="27">Esc</option>
-            <option value="3">Ctrl+C</option>
-            <option value="4">Ctrl+D</option>
-            <option value="26">Ctrl+Z</option>
-        </select>
-        <input id="sendKey" type="button" value="Send Key" onclick="sendCustomKey();" disabled=true class="button-disabled"onmousedown="javascript:this.className='button-down';" onmouseup="javascript:this.className='button';"/>
-    </form>  
-    <pre id="termtxt"></pre>
-    <div class="statusbar">
-        <span>Status: </span>
-        <span id="status">Connecting...</span> 
-    </div>
-</div>
+    <table id="termwin">
+    <tr>
+        <td>
+        <pre id="termtxt">></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>
+        <form>
+          <table>
+          <tr>
+            <td>Status: </td> 
+            <td id="status">Connecting...</td>
+            <td>
+                <input id="fakebtn" type="text" value="Show Keyboard" name="keyInput" class="button" />
+            </td>            
+            <td><select id="customKey" onchange="selectKey()">
+                <!--option value is ASCII code --->
+                <option value="" >Speical Key</option>
+                <option value="27">Esc</option>
+                <option value="3">Ctrl+C</option>
+                <option value="4">Ctrl+D</option>
+                <option value="26">Ctrl+Z</option>
+            </select>
+            </td>
+            <td>
+                <input id="sendKey" type="button" value="Send Key" onclick="sendCustomKey();" disabled=true class="button-disabled"onmousedown="javascript:this.className='button-down';" onmouseup="javascript:this.className='button';"/>
+            </td>
+          </tr>
+          </table>          
+        </form> 
+        </td>    
+    </tr>
+</table>
 </body>
 </html>

@@ -1,19 +1,19 @@
 function TerminalAssistant() {
 }
 
-TerminalAssistant.prototype.run=function(future, subscription) {    
+TerminalAssistant.prototype.run=function(future, subscription) {
+    this.setupTerm();
     future.result = {
         url:"http://localhost:50530"
     };
-    this.setupTerm();
     this.interval = setInterval(
         function ping() {
             var f = subscription.get();
             var t=Number(new Date());
             f.result = {
-                "heartbeat": t
+                heartbeat: t
             };
-        }, 1000);
+        }, 15000);
 }
 
 TerminalAssistant.prototype.cancelSubscription=function(){

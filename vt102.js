@@ -1170,7 +1170,7 @@ Terminal.prototype.dumpHTML=function(){
         //add new line
         dhtml+="\n";
     }
-    dhtml += "</span>\n";
+    dhtml += "</span>";
     return '<div y="'+cy+'" x="'+cx+'" ></div>'+dhtml;
 }
 

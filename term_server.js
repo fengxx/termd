@@ -24,6 +24,7 @@ var termServer=exports.termServer=function(port,width,height){
             })
             res.write("stoped", 'utf8');
             res.end();
+            console.log("try to stop servie");
             self.terminateHandler();
         }else {
             fs.readFile(__dirname + path, function(err, data){
