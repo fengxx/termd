@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <title>terminal</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="term_client.css"/>
+    <script src="lib/wsocket_client.js"></script>    
+    <script src="term_client.js"></script>
+  </head>
+  <body>    
+    <script>
+        window.onload=function() {
+            t=termClient.Terminal("termtxt","status");
+            document.onkeypress=t.keypress;
+            document.onkeydown=function(){
+                t.keydown();
+            };
+            document.onkeyup=t.keyup;
+        };
+        function sendCustomKey(){
+            var val=document.getElementById("customKey").value;
+            if(val.length>0){
+                t.queue(escape(String.fromCharCode(Number(val))));
+            }
+        }
+        function selectKey(){
+            var val=document.getElementById("customKey").value;
+            var disable=(val.length==0);
+            document.getElementById("sendKey").disabled=disable;
+            document.getElementById("sendKey").className=(disable?"button-disabled":"button");
+       }
+    </script>   
+<div id="termwin">
+    <form>
+        <input id="fakebtn" type="text" value="Show Keyboard" name="keyInput" class="button" />
+        <select id="customKey" onchange="selectKey()">
+            <!--option value is ASCII code --->
+            <option value="" >Speical Key</option>
+            <option value="27">Esc</option>
+            <option value="3">Ctrl+C</option>
+            <option value="4">Ctrl+D</option>
+            <option value="26">Ctrl+Z</option>
+        </select>
+        <input id="sendKey" type="button" value="Send Key" onclick="sendCustomKey();" disabled=true class="button-disabled"onmousedown="javascript:this.className='button-down';" onmouseup="javascript:this.className='button';"/>
+    </form>  
+    <pre id="termtxt"></pre>
+    <div class="statusbar">
+        <span>Status: </span>
+        <span id="status">Connecting...</span> 
+    </div>
+</div>
+</body>
+</html>
