@@ -1161,6 +1161,7 @@ Terminal.prototype.dumpHTML=function(){
             }
             else if(ch==0){
                 dhtml+="\u0020";
+                //dhtml+="&nbsp;";
             }else {
             //TODO fix for UTF8
             dhtml+= String.fromCharCode(ch);

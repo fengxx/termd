@@ -1,31 +1,51 @@
 enyo.kind({
 	name: "App",
-	kind: enyo.VFlexBox,
+	kind:"VFlexBox",
 	components: [
-		{kind: "enyo.PalmService", service: "palm://com.fengxx.term.service", method: "runshell", subscribe: true, onSuccess: "status", onFailure: "fail"},
-		{kind: "HFlexBox", components: [
-			{name:"startbtn", kind: "Button", caption: "Start Service", onclick: "go"},
-			{name:"stopbtn", kind: "Button", caption: "Stop Service", onclick: "cancel","disabled":true}
+    	{kind:"Toolbar", className:"enyo-toolbar-light", pack:"center", components: [
+			{kind: "Image", src: "icon.png"},
+			{kind: "Control", content: "Terminal"}
 		]},
-		{flex: 1, kind: "Scroller", style: "background-color: gray;", components: [
-			{components: [
-				{name: "console", kind: "HtmlContent", style: "font-size: 10pt; background-color: white;"}
-			]}
-		]}
+       {kind:"Control", style:"width:500px; margin:23px auto 0;" , 
+          components: [
+            {kind: "RowGroup",
+                components: [
+                {kind: "Item", tapHighlight: false, layoutKind: "HFlexLayout", 
+                        components: [
+                            {flex:1, content: "Terminal Service"},
+                            {kind: "ToggleButton", name:"termControl", state:false, onChange:"toggleService"}
+                ]}	        	
+            ]},
+            {name: "console", kind: "HtmlContent", 
+            style: "font-size: 10pt;"}
+         ]
+       },
+        {kind: "enyo.PalmService", service: "palm://com.fengxx.term.service", 
+            method: "runshell", subscribe: true, onSuccess: "status", 
+            onFailure: "fail"
+        }
 	],
-	go: function() {
-		var request = this.$.palmService.call();
+    timestamp:0,
+    url:"",
+    toggleService:function(inSender, inEvent) {
+        if(inSender.getState()){
+            var request = this.$.palmService.call();
+        }else{
+            this.closeService();
+        }		
 	},
-	cancel: function() {
+	closeService: function() {
         //ajax call the stop function
-        var self=this;
+        if(!this.url){
+            this.url="http://localhost:50530";
+        }
         enyo.xhrGet({
-            url: self.url+"/admin/stop",
+            url: this.url+"/admin/stop",
             load:function(){
-                self.$.palmService.cancel();
-                self.$.console.setContent("> cancelled<br/>");
-                self.setServiceStopped(true);
-                }
+                this.$.palmService.cancel();
+                this.$.console.setContent("Service Stopped<br/>");
+                this.setServiceStopped(true);
+          }
         });
 	},
 	status: function(inSender, inResponse) {
@@ -35,34 +55,27 @@ enyo.kind({
             this.url=inResponse.url;
             window.open(inResponse.url, "_blank","location=0,status=0,scrollbars=1");
             this.$.console.setContent( "<a href='"+inResponse.url+"' onclick='window.open(this.href)'> Open Terminal </a>");
-            this.setServiceStopped(false);
             setTimeout(enyo.bind(this, "checkAlive"), 300);
         }
         if(inResponse.heartbeat){
             this.timestamp=inResponse.heartbeat;
-            //this.$.console.addContent(timestamp + "<br/>");
         }
 	},
 	fail: function(inSender, inResponse) {
-		this.$.console.addContent(enyo.json.stringify(inResponse) + "<br/>");
+		this.$.console.setContent(enyo.json.stringify(inResponse) + "<br/>");
 	},
     checkAlive: function(){
         var t=Number(new Date());
-        console.log("t:"+t +" live:"+this.timestamp);
+        //this.$.console.setContent("timestamp: "+this.timestamp +" url: "+this.url);
         //2 minutes
         if(this.timestamp && t-this.timestamp> 120000){
-            this.$.console.setContent(">no response<br/>");
+            this.$.console.setContent(">no response in 2 minutes<br/>");
             //cancel request
             this.$.palmService.cancel();
-            this.setServiceStopped(true);
+            //
+            this.$.termControl.setState(false);
         }else{
             setTimeout(enyo.bind(this, "checkAlive"), 25000);
         }
-    },
-    setServiceStopped: function(flag){
-            this.$.stopbtn.disabled=flag;
-            this.$.startbtn.disabled=!flag;
-            this.$.stopbtn.disabledChanged();
-            this.$.startbtn.disabledChanged();
     }
-});
+    });

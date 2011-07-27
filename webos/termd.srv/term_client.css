@@ -4,12 +4,7 @@ body {
 	color: #333;
     height: 100%;
 	width: 100%;
-}
-
-html, body, input, button {
-	font-family: Prelude, Prelude Medium, Segoe UI, Arial, Helvetica, Sans-Serif;
-	font-size: 12px;
-	cursor: default;
+    font-size: 11px;
 }
 
 table,tr,td {
@@ -27,16 +22,16 @@ pre,div,form{
 #termwin {
 margin-left: auto ;
 margin-right: auto ;
-overflow: auto;
-border-width: 0px;
-height: 350px;
+width: 750px;
+font-size: 12px;
 }
 
-pre{
-font-family:Courier,Courier New,monospace;
-white-space:pre;
-display: inline-block;
-border-width:0px;
+#termtxt {
+width: 740px;
+font-family: Courier New,Courier,monospace;
+white-space: pre; 
+letter-spacing:0px;
+-webkit-text-size-adjust:none
 }
 
 span.ul { text-decoration: underline; }
@@ -77,8 +72,7 @@ span.b13 { background:  magenta;}
 span.b14 { background:  cyan;}
 span.b15 { background:  white;}
 
-.button {
-	font-size: 11px;
+.button {	
 	text-align: center;
     border-style:none;
     -webkit-border-image: url(./image/button-up.png) 4 4 4 4 stretch stretch;

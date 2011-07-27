@@ -4,7 +4,7 @@ function TerminalAssistant() {
 TerminalAssistant.prototype.run=function(future, subscription) {
     this.setupTerm();
     future.result = {
-        url:"http://localhost:50530"
+        url:this.url
     };
     this.interval = setInterval(
         function ping() {
@@ -13,7 +13,7 @@ TerminalAssistant.prototype.run=function(future, subscription) {
             f.result = {
                 heartbeat: t
             };
-        }, 15000);
+        }, 500);  
 }
 
 TerminalAssistant.prototype.cancelSubscription=function(){
@@ -21,17 +21,19 @@ TerminalAssistant.prototype.cancelSubscription=function(){
 }
 
 TerminalAssistant.prototype.setupTerm=function(){
+    var port=50530;
+    this.url="http://localhost:"+port;
     // Node.js require load
     if (typeof require === "undefined") {
-        require = IMPORTS.require;
-        require.paths.unshift(process.cwd()); 
+        require = IMPORTS.require;        
     }
-    var serv=require("term_server");
+    require.paths.unshift(process.cwd());
     var extLog=require("Logger");
     var logger=new extLog.Logger(1,"/tmp/debug_term.log");
     logger.hook();
+    var serv=require("term_server");
     console.log("server is starting");
-    var termd=new serv.termServer(50530,24,80);
+    var termd=new serv.termServer(port,22,80);
     termd.setupSocket();
     process.addListener('uncaughtException', function (err) {
         logger.log('Caught exception: ' + err);

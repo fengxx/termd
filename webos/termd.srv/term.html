@@ -16,53 +16,47 @@
                 t.keydown();
             };
             document.onkeyup=t.keyup;
+            setTimeout(function(){
+                //Hide the address bar
+                window.scrollTo(0, 1);
+            }, 30);            
         };
-        function sendCustomKey(){
-            var val=document.getElementById("customKey").value;
-            if(val.length>0){
-                t.queue(escape(String.fromCharCode(Number(val))));
+        window.onunload=function(){
+            t.close();
+        }
+        function sendCustomKey(val){
+            if(val){
+                t.queue(escape(String.fromCharCode(val)));
             }
         }
-        function selectKey(){
-            var val=document.getElementById("customKey").value;
-            var disable=(val.length==0);
-            document.getElementById("sendKey").disabled=disable;
-            document.getElementById("sendKey").className=(disable?"button-disabled":"button");
-       }
+
     </script>   
-    <table id="termwin">
-    <tr>
-        <td>
-        <pre id="termtxt">></pre>
-        </td>
-    </tr>
-    <tr>
-        <td>
+    <div id="termwin">
         <form>
           <table>
-          <tr>
+          <tr height="15px" >
             <td>Status: </td> 
             <td id="status">Connecting...</td>
             <td>
-                <input id="fakebtn" type="text" value="Show Keyboard" name="keyInput" class="button" />
-            </td>            
-            <td><select id="customKey" onchange="selectKey()">
-                <!--option value is ASCII code --->
-                <option value="" >Speical Key</option>
-                <option value="27">Esc</option>
-                <option value="3">Ctrl+C</option>
-                <option value="4">Ctrl+D</option>
-                <option value="26">Ctrl+Z</option>
-            </select>
+                <input type="text" value="Show Keyboard" class="button" />
             </td>
             <td>
-                <input id="sendKey" type="button" value="Send Key" onclick="sendCustomKey();" disabled=true class="button-disabled"onmousedown="javascript:this.className='button-down';" onmouseup="javascript:this.className='button';"/>
+                <input type="button" value="Esc"  class="button" onclick="sendCustomKey(27)" />
             </td>
+            <td>
+                <input type="button" value="^C" class="button" onclick="sendCustomKey(3)" />
+            </td>  
+            <td>
+                <input type="button" value="^D" class="button" onclick="sendCustomKey(4)" />
+            </td>   
+            <td>
+                <input type="button" value="^Z" class="button" onclick="sendCustomKey(26)" />
+            </td>          
           </tr>
           </table>          
-        </form> 
-        </td>    
-    </tr>
-</table>
+        </form>
+        <div id="termtxt" class="f15 b0">
+        </div>
+    </div>   
 </body>
 </html>

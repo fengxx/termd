@@ -17,6 +17,9 @@
             };
             document.onkeyup=t.keyup;
         };
+        window.onunload=function(){
+            t.close();
+        }
     </script>   
 <div id="termwin">   
 <pre id="status">Connecting...</pre>

@@ -217,7 +217,9 @@ termClient.TermObj=function(divid,status_id,host,port){
 		}
         return false;
     }
-    
+    this.close=function(){
+        socket.close();
+    }
     function isSpecialKey(ev){
         //event.charCode undefined or zero in keydown and keyup events
         if ((typeof event.charCode =="undefined" || event.charCode==0 ) 

@@ -3,10 +3,7 @@
   "package_format_version": 2,
   "loc_name": "termial",
   "version": "1.0.0",
-  "icon": "icon.png",
-  "miniicon": "icon.png",
-  "vendor": "Fengxx",
-  "vendorurl": "www.fengxx.com",
+  "vendor": "fengxx",
   "app": "com.fengxx.term",
   "services": ["com.fengxx.term.service"]
 }

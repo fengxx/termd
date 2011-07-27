@@ -5,9 +5,8 @@ var subShell = exports.subShell = function(rows,cols,ondata,onclose){
     env.COLUMNS=cols;
     env.LINES=rows;
     env.TERM="vt100";
-    console.log("env is "+env);
     if(!checkptmx()){
-        return;
+        throw "jailer not setup pty or devpts not mounted";
     };
     this.backport=0;
     var pty=this.openShell('/bin/sh',env,rows,cols);    
@@ -87,7 +86,6 @@ subShell.prototype.getOutput= function(){
 function checkptmx(){
     var ptmx="/dev/ptmx";
     var st=fs.lstatSync(ptmx);
-    console.log("st"+st);
     if(st.isCharacterDevice()){
         console.log("device "+ptmx+" exists");
         return true;
