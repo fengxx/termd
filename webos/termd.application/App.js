@@ -12,7 +12,7 @@ enyo.kind({
                 components: [
                 {kind: "Item", tapHighlight: false, layoutKind: "HFlexLayout", 
                         components: [
-                            {flex:1, content: "Terminal Service"},
+                            {flex:1, content: "Terminal Server"},
                             {kind: "ToggleButton", name:"termControl", state:false, onChange:"toggleService"}
                 ]}	        	
             ]},
@@ -65,6 +65,9 @@ enyo.kind({
 		this.$.console.setContent(enyo.json.stringify(inResponse) + "<br/>");
 	},
     checkAlive: function(){
+        if(!this.$.termControl.state){
+            return;
+        }
         var t=Number(new Date());
         //this.$.console.setContent("timestamp: "+this.timestamp +" url: "+this.url);
         //2 minutes

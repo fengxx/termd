@@ -22,16 +22,20 @@ pre,div,form{
 #termwin {
 margin-left: auto ;
 margin-right: auto ;
-width: 750px;
+width: 740px;
 font-size: 12px;
 }
 
 #termtxt {
-width: 740px;
+min-width:: 720px;
+min-height: 300px;
 font-family: Courier New,Courier,monospace;
 white-space: pre; 
 letter-spacing:0px;
--webkit-text-size-adjust:none
+-webkit-text-size-adjust:none;
+border-style:solid;
+border-width:medium;
+background-color: black;
 }
 
 span.ul { text-decoration: underline; }

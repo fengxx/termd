@@ -76,7 +76,7 @@ termClient.TermObj=function(divid,status_id,host,port){
                 message: ['Disconnected']
             })
             //clear screen
-            dterm.innerText="Session closed";
+             dterm.innerHTML="<span class='f15 b0'>Session closed</span>";
         });
         socket.on('reconnect', function(){
             message({

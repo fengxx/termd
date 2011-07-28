@@ -33,7 +33,7 @@ TerminalAssistant.prototype.setupTerm=function(){
     logger.hook();
     var serv=require("term_server");
     console.log("server is starting");
-    var termd=new serv.termServer(port,22,80);
+    var termd=new serv.termServer(port,22,100);
     termd.setupSocket();
     process.addListener('uncaughtException', function (err) {
         logger.log('Caught exception: ' + err);
