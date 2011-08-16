@@ -32,8 +32,8 @@ TerminalAssistant.prototype.setupTerm=function(){
     var logger=new extLog.Logger(1,"/tmp/debug_term.log");
     logger.hook();
     var serv=require("term_server");
-    console.log("server is starting");
-    var termd=new serv.termServer(port,22,100);
+    console.log("server is starting");	
+    var termd=new serv.termServer(port,24,100);
     termd.setupSocket();
     process.addListener('uncaughtException', function (err) {
         logger.log('Caught exception: ' + err);
