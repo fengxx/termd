@@ -9,13 +9,22 @@ enyo.kind({
             method: "runshell", subscribe: true, onSuccess: "status", 
             onFailure: "fail"
         },
-		{kind: "ApplicationEvents", onUnload: "unloadHandler"},
+		{kind: "ApplicationEvents", onUnload: "unloadHandler", onLoad:"onloadHandler"},
+		{name: "popupFade", kind: "Popup", showHideMode: "transition", openClassName: "fadeIn", 
+			className: "fadedOut", components: [
+			{content: "Tap to activate the application"},
+		]},
 	],
     timestamp:0,
     url:"",
-    create: function() {
-		this.inherited(arguments);
+    onloadHandler: function() {
 		var request = this.$.palmService.call();
+		this.$.popupFade.openAtCenter();
+		setTimeout(enyo.bind(this, "closePopup"), 2000);
+		this.$.view.forceFocusEnableKeyboard();
+	},
+	closePopup: function(){
+		this.$.popupFade.close();
 	},
 	unloadHandler: function (e) {
 		// Destroy component tree on window unload, so we can rely on destructors for cleanup.
@@ -35,7 +44,8 @@ enyo.kind({
             this.url=inResponse.url;
             //window.open(inResponse.url, "_blank","location=0,status=0,scrollbars=1");
 			this.$.view.setUrl(this.url);
-			enyo.keyboard.forceShow(0);
+			//enyo.keyboard.forceShow(0);
+			//enyo.keyboard.scrollIntoView();
         }
 	},
 	fail: function(inSender, inResponse) {

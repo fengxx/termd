@@ -24,6 +24,7 @@ margin-left: auto ;
 margin-right: auto ;
 width: 740px;
 font-size: 12px;
+display: block;
 }
 
 #termtxt {
@@ -85,6 +86,12 @@ span.b15 { background:  white;}
 }
 .button-down{
 	-webkit-border-image: url(./image/button-down.png) 4 4 4 4 stretch stretch;
+}
+
+.button-keyboard {
+	border-style:none;
+    background: url(./image/keyboard.png) center center no-repeat;
+	display: block;
 }
 
 .button-disabled {
