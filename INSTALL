@@ -1,3 +1,4 @@
 if you are running under node.js higher than v0.4.9 just run
 node termd.js
 then open your browser point to http://IP:50530
+For webos please check dist folder for more information
